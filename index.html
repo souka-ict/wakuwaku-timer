@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffe8c4">
+<title>わくわく 4ぷんタイマー</title>
+<style>
+  :root { color-scheme: light; --accent:#b67542; --accent2:#f6c07f; --soft:#fff0df; --deep:#66442b; --glow:#ffda97; }
+  * { box-sizing:border-box; }
+  html { height:100%; }
+  body { margin:0; min-height:100%; font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif; font-weight:800; color:var(--deep); transition:background .55s ease,color .3s; background:radial-gradient(circle at 9% 18%,#ffffffc0 0 5%,transparent 24%),radial-gradient(circle at 95% 0%,#ffffffbb 0 7%,transparent 24%),linear-gradient(135deg,var(--soft),#fffdf7 75%); }
+  body[data-stage="silver"] { --accent:#508cb8;--accent2:#b6dfed;--soft:#e3f4ff;--deep:#285779;--glow:#b6e0ff; }
+  body[data-stage="gold"] { --accent:#dc9708;--accent2:#ffe37a;--soft:#fff5bc;--deep:#7b5200;--glow:#ffe16e; }
+  body[data-stage="king"] { --accent:#925dc9;--accent2:#e9bbff;--soft:#f3e6ff;--deep:#603c92;--glow:#dbbdff; }
+  body[data-stage="god"] { --accent:#b78a09;--accent2:#fff4a0;--soft:#fffbe0;--deep:#765500;--glow:#ffe77a; }
+  body[data-stage="hero"] { --accent:#f05278;--accent2:#ffb8c9;--soft:#ffe2ec;--deep:#a72359;--glow:#ffc2e0; }
+  body[data-stage="finish"] { --accent:#e94c72;--accent2:#fff59f;--soft:#ffe6f2;--deep:#bb2461;--glow:#ffe7a6; }
+  button { font-family:inherit; cursor:pointer; }
+  button:focus-visible { outline:4px solid #257de8;outline-offset:4px; }
+  .shell { position:relative; max-width:1350px; min-height:100dvh; margin:auto; padding:clamp(14px,2.4vw,28px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px,1.7vh,20px); overflow:hidden; }
+  .spark { position:absolute;pointer-events:none;opacity:.67;color:var(--accent);filter:drop-shadow(1px 3px 0 #fff9);font-size:clamp(20px,4vw,49px);animation:float 4s ease-in-out infinite; }
+  .s1{left:5%;top:16%}.s2{right:6%;top:22%;animation-delay:-2s}.s3{left:10%;bottom:22%;animation-delay:-1s}.s4{right:9%;bottom:25%;animation-delay:-3s}
+  @keyframes float { 0%,100% {transform:translateY(0) rotate(-11deg)}50%{transform:translateY(-13px) rotate(13deg)} }
+  .title { color:var(--accent);text-align:center;font-size:clamp(17px,2.2vw,27px);letter-spacing:.09em;margin:0; }
+  .stages { display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;max-width:980px; }
+  .stage-dot { background:#fff9;border:2px solid color-mix(in srgb,var(--accent) 23%,white);border-radius:999px;color:#8d8d8d;padding:6px 12px;font-size:clamp(10px,1.6vw,18px);box-shadow:0 3px 0 #ffffffaa;white-space:nowrap;transition:.3s; }
+  .stage-dot.active {color:var(--deep);background:var(--accent2);border-color:var(--accent);transform:scale(1.06);box-shadow:0 4px 0 var(--accent);}
+  .stage-dot.past {color:var(--accent)}
+  .main { width:min(100%,780px);display:flex;align-items:center;flex-direction:column;gap:clamp(7px,1.2vh,14px); }
+  .art-panel {position:relative;display:grid;place-items:center;width:clamp(175px,29vh,285px);height:clamp(155px,27vh,265px);background:radial-gradient(circle at 50% 55%,#fff 0%,#fffd 39%,transparent 70%);filter:drop-shadow(0 12px 4px #0000000a)}
+  .art-panel::after { content:"✦";position:absolute;color:var(--accent);right:3%;top:8%;font-size:40px;animation:twinkle 1.7s ease-in-out infinite alternate }
+  .art-panel::before { content:"✧";position:absolute;color:var(--accent);left:4%;bottom:20%;font-size:34px;animation:twinkle 1.4s ease-in-out infinite alternate-reverse }
+  @keyframes twinkle{to{transform:scale(1.4);opacity:.4}}
+  .art-panel svg {width:100%;height:100%;overflow:visible;animation:bob 2.7s ease-in-out infinite}
+  @keyframes bob {0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .rank-wrap { text-align:center;}
+  .rank-caption {color:var(--accent);font-size:clamp(13px,2vw,21px);margin:0 0 0.05em}
+  .rank {font-size:clamp(38px,7.5vw,83px);line-height:1.15;margin:0;color:var(--accent);font-weight:900;letter-spacing:.04em;text-shadow:3px 4px 0 #fff,0 8px 14px #0000000d;}
+  .timer-box { position:relative;border-radius:clamp(24px,4vw,40px);padding:3px;background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 11px 0 color-mix(in srgb,var(--accent) 20%,#fff),0 15px 26px #0000000c;width:100%; }
+  .timer-inner {background:#ffffffef;border-radius:inherit;display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column;padding:clamp(9px,1.9vh,24px) 12px}
+  .time-caption {color:var(--accent);font-size:clamp(13px,2.4vw,21px)}
+  .time {font-family:ui-rounded,"Arial Rounded MT Bold",Arial,sans-serif;font-size:clamp(92px,20vw,180px);font-variant-numeric:tabular-nums;line-height:.96;font-weight:900;letter-spacing:-.055em;color:#252237;white-space:nowrap;font-feature-settings:"tnum";}
+  .track {width:min(100%,780px);height:clamp(15px,2.6vh,23px);border-radius:100px;overflow:hidden;background:#ffffffda;border:3px solid #fff;box-shadow:inset 0 2px 5px #0002,0 3px 9px #0001;}
+  .bar {height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .1s linear,background .3s;}
+  .buttons { display:flex;justify-content:center;gap:clamp(8px,1.4vw,17px);flex-wrap:wrap;margin-top:clamp(4px,1vh,13px); }
+  .btn {border:0;border-radius:100px;padding:clamp(10px,1.4vw,18px) clamp(17px,2.8vw,31px);background:#fff;color:var(--deep);font-size:clamp(15px,2vw,22px);font-weight:900;box-shadow:0 6px 0 #00000016;transition:transform .12s,box-shadow .12s;}
+  .btn:active {transform:translateY(4px);box-shadow:0 2px 0 #00000015}
+  .btn.primary {background:var(--accent);color:white;min-width:clamp(150px,22vw,240px);font-size:clamp(18px,2.6vw,27px);box-shadow:0 6px 0 color-mix(in srgb,var(--accent) 75%,#473b39);}
+  .btn:disabled {opacity:.55;cursor:default}
+  .hint {text-align:center;font-weight:800;color:var(--accent);font-size:clamp(13px,1.7vw,18px);margin:0;}
+  .finish-message {max-width:100%;font-size:clamp(48px,12vw,115px);color:var(--accent);text-align:center;line-height:1.1;animation:pulse 1s ease-in-out infinite alternate;filter:drop-shadow(3px 5px 0 #fff);}
+  @keyframes pulse {to{transform:scale(1.045)}}
+  .sound-note {font-size:clamp(12px,1.5vw,16px);text-align:center;color:#7f7e84;margin:0}
+  @media(max-height:740px){.shell{gap:7px}.art-panel{width:clamp(130px,20vh,200px);height:clamp(125px,20vh,195px)}.rank{font-size:clamp(32px,6vw,56px)}.time{font-size:clamp(75px,17vh,134px)}.timer-inner{padding:7px}.stage-dot{padding:4px 9px}}
+  @media(max-width:600px){.shell{justify-content:space-evenly}.s1,.s2,.s3,.s4{opacity:.25}.stages{max-width:370px}.stage-dot{font-size:11px;padding:5px 7px}.time{font-size:clamp(82px,21vw,125px)}.art-panel{width:min(53vw,210px);height:min(45vw,185px)}.btn{font-size:14px;padding:12px 15px}.btn.primary{font-size:18px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+  .cloud-god { position:relative;width:100%;height:100%;animation:god-float 3.2s ease-in-out infinite; }
+  .god-halo { position:absolute;left:33%;top:8%;width:34%;height:12%;border:6px solid #ffd65a;border-radius:50%;background:#fff7be;box-shadow:0 0 18px #ffe88c;transform:rotate(-8deg); }
+  .god-face { position:absolute;left:23%;top:30%;width:54%;height:51%;border-radius:46% 46% 48% 48%;background:#fff0db;border:3px solid #e9c597;z-index:3; }
+  .god-hair { position:absolute;left:17%;top:23%;width:66%;height:30%;border-radius:55%;background:white;border:3px solid #e8d9f3;z-index:4;box-shadow:-10px 5px 0 -2px white,10px 5px 0 -2px white; }
+  .god-hair::after { content:"";position:absolute;width:30%;height:80%;left:20%;top:12%;background:white;border-radius:50%;box-shadow:30px -5px 0 white; }
+  .god-eyes { position:absolute;top:34%;left:22%;width:15%;height:12%;border-top:4px solid #785342;border-radius:50%; }
+  .god-eyes::after { content:"";position:absolute;left:240%;top:-4px;width:100%;height:100%;border-top:4px solid #785342;border-radius:50%; }
+  .god-cheeks { position:absolute;top:51%;left:9%;width:20%;height:14%;background:#ffafbb;border-radius:50%; }
+  .god-cheeks::after {content:"";position:absolute;left:310%;width:100%;height:100%;background:#ffafbb;border-radius:50%}
+  .god-mouth { position:absolute;left:39%;top:51%;width:23%;height:22%;background:#dc777f;border-radius:15% 15% 55% 55%;border:2px solid #ad5964; }
+  .god-cloud { position:absolute;left:9%;bottom:8%;width:82%;height:28%;background:#fff;border:3px solid #dfd5f3;border-radius:50%;z-index:5; }
+  .god-cloud::before,.god-cloud::after { content:"";position:absolute;background:#fff;border-radius:50%;width:36%;height:120%;top:-40%; }
+  .god-cloud::before {left:16%}.god-cloud::after{right:14%}
+  .god-star { position:absolute;font-size:clamp(20px,4vh,38px);color:#efb52b;top:30%;left:1%; }
+  .god-star.right {left:auto;right:0;top:53%;font-size:clamp(16px,3vh,29px)}
+  @keyframes god-float {0%,100%{transform:translateY(5px) rotate(-3deg)}50%{transform:translateY(-13px) rotate(3deg)}}
+
+  .doll-god .god-halo {top:1%;left:35%;width:30%;height:8%;border-width:4px}
+  .doll-god .god-face {left:27%;top:20%;width:46%;height:40%;border-radius:45% 45% 48% 48%;z-index:5}
+  .doll-god .god-hair {left:23%;top:14%;width:54%;height:22%;z-index:6}
+  .doll-god .god-hair::after {box-shadow:20px -4px 0 white}
+  .doll-robe {position:absolute;left:31%;top:53%;width:38%;height:34%;background:linear-gradient(110deg,#fffdf2,#fff2c8);border:3px solid #dbc38c;border-radius:35% 35% 25% 25%;z-index:4;display:grid;place-items:center}
+  .doll-robe span {color:#eab733;font-size:clamp(18px,4vh,34px);text-shadow:0 2px white}
+  .doll-arm {position:absolute;top:57%;width:16%;height:12%;background:#fff0db;border:3px solid #e9c597;border-radius:50%;z-index:3}
+  .doll-arm.left {left:18%;transform:rotate(-30deg)}
+  .doll-arm.right {right:18%;transform:rotate(30deg)}
+  .doll-leg {position:absolute;top:82%;width:15%;height:12%;background:#fff0db;border:3px solid #e9c597;border-radius:45%;z-index:3}
+  .doll-leg.left {left:33%;transform:rotate(12deg)}
+  .doll-leg.right {right:33%;transform:rotate(-12deg)}
+  .doll-god .god-star {top:40%}
+  .art-panel .god-doll {animation:god-float 3.2s ease-in-out infinite}
+</style>
+</head>
+<body data-stage="god">
+<main class="shell" aria-label="4ぷん カウントダウンタイマー">
+  <span class="spark s1" aria-hidden="true">✦</span><span class="spark s2" aria-hidden="true">★</span><span class="spark s3" aria-hidden="true">✧</span><span class="spark s4" aria-hidden="true">✦</span>
+  <p class="title">🌈 わくわく 4ぷんタイマー 🌈</p>
+  <div class="stages" id="stages" aria-label="ランクのじゅんばん">
+    <span class="stage-dot active" data-key="god">✨ かみさま</span><span class="stage-dot" data-key="hero">🌟 さいきょう</span><span class="stage-dot" data-key="king">👑 おうさま</span><span class="stage-dot" data-key="gold">🥇 きん</span><span class="stage-dot" data-key="silver">🥈 ぎん</span><span class="stage-dot" data-key="bronze">🥉 どう</span>
+  </div>
+  <section class="main">
+    <div class="art-panel" id="mascot" aria-hidden="true"></div>
+    <div class="rank-wrap"><p class="rank-caption" id="caption">いまの ランク</p><h1 class="rank" id="rank">かみさま</h1></div>
+    <div class="timer-box"><div class="timer-inner"><div class="time-caption">はかった じかん</div><output class="time" id="time" role="timer" aria-live="off">0:00</output></div></div>
+  </section>
+  <div class="track" role="progressbar" aria-label="はかったじかん" aria-valuemin="0" aria-valuemax="240" aria-valuenow="0" id="track"><div class="bar" id="bar"></div></div>
+  <div class="buttons"><button class="btn primary" type="button" id="start">▶ スタート</button><button class="btn" type="button" id="reset">↻ はじめから</button><button class="btn" type="button" id="sound" aria-pressed="true">🔊 おと ON</button><button class="btn" type="button" id="fullscreen">⛶ おおきく</button></div>
+  <p class="hint" id="hint">4ぷんで おしまい！</p>
+  <p class="sound-note">※ おとは「スタート」をおしてから なります。</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const TOTAL = 240;
+  const $ = id => document.getElementById(id);
+  const timeEl=$('time'), rankEl=$('rank'), mascotEl=$('mascot'), captionEl=$('caption'), hintEl=$('hint'), barEl=$('bar'), trackEl=$('track'), startBtn=$('start'), resetBtn=$('reset'), soundBtn=$('sound'), fullBtn=$('fullscreen');
+  const ranks={god:'かみさま',bronze:'どうメダル',silver:'ぎんメダル',gold:'きんメダル',king:'おうさま',hero:'さいきょう',finish:'そこまで！'};
+  const order=['god','hero','king','gold','silver','bronze'];
+  // ステージは「経過時間」で決まります。
+  function stageFor(seconds){ if(seconds>=TOTAL)return 'finish';if(seconds<=25)return 'god';if(seconds<=40)return 'hero';if(seconds<60)return 'king';if(seconds<120)return 'gold';if(seconds<180)return 'silver';return 'bronze'; }
+  function medalArt(main,shade){ return `<svg viewBox="0 0 280 248" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffef5"/><stop offset=".45" stop-color="${main}"/><stop offset="1" stop-color="${shade}"/></linearGradient></defs><path d="M77 9 L119 9 151 88 111 102Z" fill="#e66f7f" stroke="#b73e61" stroke-width="5"/><path d="M153 8 L197 8 166 101 125 90Z" fill="#8fcdf5" stroke="#4589c1" stroke-width="5"/><circle cx="140" cy="137" r="91" fill="${shade}" stroke="white" stroke-width="7"/><circle cx="140" cy="137" r="81" fill="url(#metal)" stroke="${shade}" stroke-width="7"/><circle cx="140" cy="137" r="67" fill="none" stroke="#ffffff99" stroke-width="4"/><ellipse cx="104" cy="146" rx="12" ry="8" fill="#ee8292" opacity=".65"/><ellipse cx="178" cy="146" rx="12" ry="8" fill="#ee8292" opacity=".65"/><path d="M101 124q8 -12 17 0M164 124q8 -12 17 0" fill="none" stroke="#574341" stroke-width="6" stroke-linecap="round"/><path d="M121 160q19 24 39 0" fill="none" stroke="#6a4042" stroke-width="7" stroke-linecap="round"/><path d="M57 144q-17 -22 -26 -6M225 144q17 -22 26 -6" fill="none" stroke="${shade}" stroke-width="10" stroke-linecap="round"/><circle cx="31" cy="137" r="9" fill="${main}"/><circle cx="250" cy="137" r="9" fill="${main}"/><path d="M115 222l-11 14M167 222l11 14" stroke="${shade}" stroke-width="10" stroke-linecap="round"/></svg>`; }
+  function kingArt(){return `<svg viewBox="0 0 280 248" xmlns="http://www.w3.org/2000/svg"><path d="M68 214q-8-80 73-83 82 3 74 83" fill="#b254bf" stroke="#683a90" stroke-width="6"/><path d="M79 200q61-25 124 0" fill="none" stroke="#fff" stroke-width="19" stroke-linecap="round"/><path d="M77 167Q62 113 77 80q20-56 66-49 55-7 66 60l-11 72" fill="#744c3a"/><ellipse cx="141" cy="126" rx="67" ry="68" fill="#ffd9ae" stroke="#b98367" stroke-width="5"/><ellipse cx="98" cy="139" rx="11" ry="8" fill="#ff9cb3"/><ellipse cx="184" cy="139" rx="11" ry="8" fill="#ff9cb3"/><path d="M104 117q8-12 16 0M161 117q8-12 16 0" fill="none" stroke="#523a3a" stroke-width="6" stroke-linecap="round"/><path d="M123 146q18 21 37 0" fill="none" stroke="#9c404a" stroke-width="7" stroke-linecap="round"/><path d="M81 73L63 17 111 39 140 5 169 39 216 17 198 73Z" fill="#ffd83d" stroke="#d68d06" stroke-width="7" stroke-linejoin="round"/><path d="M86 65H195" stroke="#fff5aa" stroke-width="7" stroke-linecap="round"/><ellipse cx="140" cy="43" rx="10" ry="15" fill="#ec557a" stroke="#fff" stroke-width="4"/><path d="M82 187L52 167M200 187L230 167" stroke="#b254bf" stroke-width="17" stroke-linecap="round"/><circle cx="48" cy="164" r="11" fill="#ffd9ae"/><circle cx="234" cy="164" r="11" fill="#ffd9ae"/><circle cx="140" cy="203" r="13" fill="#ffce33"/></svg>`;}
+  function heroArt(){return `<svg viewBox="0 0 280 248" xmlns="http://www.w3.org/2000/svg"><path d="M105 140L21 209 113 211 159 166 253 223 212 129" fill="#ed4772" stroke="#af2654" stroke-width="6" stroke-linejoin="round"/><path d="M81 215q-7-72 60-72t63 72" fill="#4485e8" stroke="#2356a0" stroke-width="6"/><path d="M120 164l21 18 20-18-7 42h-26z" fill="#ffe054"/><path d="M82 89Q76 26 141 26t60 63l-8 36H90z" fill="#553d3c"/><ellipse cx="141" cy="119" rx="61" ry="67" fill="#ffd9b5" stroke="#ad765d" stroke-width="5"/><path d="M87 102q54-29 109 0v27q-27-14-54 0-27-14-55 0z" fill="#e44e6e"/><ellipse cx="116" cy="115" rx="7" ry="9" fill="#253049"/><ellipse cx="166" cy="115" rx="7" ry="9" fill="#253049"/><path d="M122 151q20 22 38 0" fill="none" stroke="#9d4256" stroke-width="7" stroke-linecap="round"/><path d="M75 184L46 145M209 181l28-45" stroke="#4485e8" stroke-width="20" stroke-linecap="round"/><circle cx="43" cy="138" r="17" fill="#ffd9b5" stroke="#ad765d" stroke-width="4"/><circle cx="242" cy="133" r="17" fill="#ffd9b5" stroke="#ad765d" stroke-width="4"/><path d="M38 38l7 17 16 5-16 6-7 17-7-17-16-6 16-5zM236 30l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" fill="#ffe16e" stroke="#f9aa24" stroke-width="3"/></svg>`;}
+  function finishArt(){return `<svg viewBox="0 0 280 248" xmlns="http://www.w3.org/2000/svg"><path d="M65 182q29-48 32-100c3-58 82-59 87 0q2 51 31 100z" fill="#ffd74b" stroke="#d39200" stroke-width="8" stroke-linejoin="round"/><path d="M58 183h164" stroke="#d39200" stroke-width="15" stroke-linecap="round"/><circle cx="141" cy="203" r="17" fill="#f6a12b" stroke="#d39200" stroke-width="6"/><ellipse cx="110" cy="135" rx="11" ry="7" fill="#fc8ea6"/><ellipse cx="174" cy="135" rx="11" ry="7" fill="#fc8ea6"/><path d="M109 117q10-11 18 0m32 0q10-11 18 0" stroke="#734a42" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M123 151q18 19 35 0" stroke="#9b5450" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M47 75q-29 32-11 68M232 75q29 32 11 68" fill="none" stroke="#e9769c" stroke-width="9" stroke-linecap="round"/><path d="M35 26l6 13 13 5-13 5-6 13-6-13-13-5 13-5zM247 23l6 13 13 5-13 5-6 13-6-13-13-5 13-5z" fill="#ffc847"/></svg>`;}
+  function godArt() {
+    return `<svg class="god-doll" viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="133" cy="244" rx="76" ry="9" fill="#d9cef0" opacity=".3"/>
+      <g stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="134" cy="24" rx="39" ry="11" fill="#fff7b6" stroke="#e4b439" stroke-width="5"/>
+        <path d="M91 215l-5 20q9 11 24 0l3-20M153 215l3 20q13 11 24 0l-6-20" fill="#ffdfc2" stroke="#c58e6a" stroke-width="3"/>
+        <path d="M106 133q-22 4-42 33l22 17 21-18M161 136q24-2 43 26l-19 17-22-16" fill="#fffef8" stroke="#d6c8b5" stroke-width="4"/>
+        <circle cx="66" cy="173" r="12" fill="#ffdfc2" stroke="#c58e6a" stroke-width="3"/>
+        <path d="M105 137q29-13 58 0l20 83q-49 18-97 0z" fill="#fffef8" stroke="#d6c8b5" stroke-width="4"/>
+        <path d="M112 160l44 51M103 183l55 10" stroke="#e7bc50" stroke-width="9"/>
+        <path d="M126 210l9 6 9-6" fill="none" stroke="#eadfcf" stroke-width="3"/>
+        <path d="M83 83q-14-40 19-41 17-20 32-5 23-14 37 6 28-1 24 37l-11 34H94z" fill="#fff" stroke="#d8cedf" stroke-width="4"/>
+        <ellipse cx="134" cy="98" rx="49" ry="48" fill="#ffdfc2" stroke="#c58e6a" stroke-width="3"/>
+        <path d="M89 80q-2-31 24-27 3-17 22-10 24-9 25 11 22-1 22 28-22-5-30-21-22 26-63 19z" fill="#fff" stroke="#d8cedf" stroke-width="3"/>
+        <path d="M87 113q-5 48 47 61 55-17 48-62-19 18-48 4-28 14-47-3z" fill="#fff" stroke="#d8cedf" stroke-width="3"/>
+        <path d="M104 98q8-10 16 0M149 98q8-10 16 0" fill="none" stroke="#73523e" stroke-width="4"/>
+        <path d="M103 87l16-2M150 85l16 2" stroke="#fff" stroke-width="6"/>
+        <ellipse cx="102" cy="110" rx="10" ry="6" fill="#ffa9b3"/>
+        <ellipse cx="167" cy="110" rx="10" ry="6" fill="#ffa9b3"/>
+        <path d="M122 119q12 15 24 0" fill="#e98991" stroke="#aa5d63" stroke-width="2"/>
+        <path d="M218 96v139" stroke="#ba8631" stroke-width="8"/>
+        <path d="M218 96v139" stroke="#f4cf70" stroke-width="4"/>
+        <path d="M218 56l7 15 17 2-12 12 3 17-15-8-15 8 3-17-12-12 17-2z" fill="#ffe586" stroke="#d7a12c" stroke-width="3"/>
+        <circle cx="202" cy="173" r="11" fill="#ffdfc2" stroke="#c58e6a" stroke-width="3"/>
+        <path d="M45 67v18M36 76h18M242 127v14M235 134h14" stroke="#e8b43e" stroke-width="4"/>
+      </g>
+    </svg>`;
+  }
+  const arts={god:godArt(),bronze:medalArt('#e9b27c','#a66c43'),silver:medalArt('#edf7fe','#95b3ce'),gold:medalArt('#fff36c','#dfa21e'),king:kingArt(),hero:heroArt(),finish:finishArt()};
+  let elapsed=0, running=false, startedAt=0, tickId=null, currentStage='', soundOn=true, audioContext=null;
+  function unlockAudio(){ if(!soundOn)return;try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;if(!audioContext)audioContext=new A();if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});}catch(err){} }
+  let alarmNodes = [];
+  let alarmEndTimer = null;
+  function stopAlarm() {
+    clearTimeout(alarmEndTimer);
+    alarmEndTimer = null;
+    for (const node of alarmNodes) {
+      try { node.stop(); } catch {}
+      node.disconnect();
+    }
+    alarmNodes = [];
+  }
+  function chime() {
+    stopAlarm();
+    if (!soundOn) return;
+    unlockAudio();
+    if (!audioContext) return;
+    const now = audioContext.currentTime;
+    // Eight short beeps, then a pause. Repeat for twenty seconds.
+    for (let group = 0; group < 20; group += 2) {
+      for (let beep = 0; beep < 8; beep++) {
+        const tone = audioContext.createOscillator();
+        const volume = audioContext.createGain();
+        const startTime = now + group + beep * 0.16;
+        tone.type = 'sine';
+        tone.frequency.value = 1800;
+        volume.gain.setValueAtTime(0, startTime);
+        volume.gain.linearRampToValueAtTime(0.18, startTime + 0.005);
+        volume.gain.setValueAtTime(0.18, startTime + 0.085);
+        volume.gain.linearRampToValueAtTime(0, startTime + 0.10);
+        tone.connect(volume);
+        volume.connect(audioContext.destination);
+        tone.onended = () => volume.disconnect();
+        tone.start(startTime);
+        tone.stop(startTime + 0.11);
+        alarmNodes.push(tone);
+      }
+    }
+    alarmEndTimer = setTimeout(stopAlarm, 20000);
+  }
+  function render(){
+    const seconds=Math.floor(elapsed); const min=Math.floor(seconds/60), sec=seconds%60;
+    timeEl.textContent=`${min}:${String(sec).padStart(2,'0')}`;
+    const stage=stageFor(seconds);
+    if(stage!==currentStage){currentStage=stage;document.body.dataset.stage=stage;rankEl.textContent=ranks[stage];mascotEl.innerHTML=arts[stage];captionEl.textContent=stage==='finish'?'おしまい！':'いまの ランク';hintEl.textContent=stage==='finish'?'よく がんばったね！':'4ぷんで おしまい！'; for(const dot of document.querySelectorAll('.stage-dot')){const idx=order.indexOf(dot.dataset.key),active=order.indexOf(stage);dot.classList.toggle('active',dot.dataset.key===stage);dot.classList.toggle('past',active>idx);} }
+    barEl.style.width=`${(elapsed/TOTAL)*100}%`;
+    trackEl.setAttribute('aria-valuenow',String(seconds));
+    startBtn.textContent=stage==='finish'?'▶ もういちど':running?'Ⅱ いったん とめる':elapsed===0?'▶ スタート':'▶ つづける';
+    startBtn.setAttribute('aria-label',startBtn.textContent);
+  }
+  function stop() {
+    running = false;
+    clearInterval(tickId);
+    tickId = null;
+  }
+  function tick() {
+    if (!running) return;
+    elapsed = Math.min(TOTAL, (performance.now() - startedAt) / 1000);
+    if (elapsed === TOTAL) {
+      stop();
+      chime();
+    }
+    render();
+  }
+  function start() {
+    stopAlarm();
+    unlockAudio();
+    if (running) {
+      tick();
+      stop();
+      render();
+      return;
+    }
+    if (elapsed === TOTAL) elapsed = 0;
+    startedAt = performance.now() - elapsed * 1000;
+    running = true;
+    tickId = setInterval(tick, 80);
+    render();
+  }
+  function reset() {
+    stopAlarm();
+    stop();
+    elapsed = 0;
+    render();
+  }
+  startBtn.addEventListener('click',start); resetBtn.addEventListener('click',reset);
+  soundBtn.addEventListener('click',()=>{soundOn=!soundOn;if(!soundOn)stopAlarm();soundBtn.textContent=soundOn?'🔊 おと ON':'🔇 おと OFF';soundBtn.setAttribute('aria-pressed',String(soundOn));if(soundOn)unlockAudio();});
+  fullBtn.addEventListener('click',async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();}else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();}else{fullBtn.textContent='おおきく表示できません';}}catch(err){fullBtn.textContent='おおきく表示できません';}});
+  document.addEventListener('fullscreenchange',()=>{fullBtn.textContent=document.fullscreenElement?'⛶ もどす':'⛶ おおきく';});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&running)tick();});
+  render();
+})();
+</script>
+</body>
+</html>
